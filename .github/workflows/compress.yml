@@ -1,0 +1,42 @@
+name: Compress JavaScript
+
+on:
+  push:
+    branches:
+      - main  # Change this to match your branch name
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  minify-js:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18  # Use the latest LTS version
+
+      - name: Install Dependencies
+        run: npm install terser -g
+
+      - name: Minify JavaScript
+        run: |
+          mkdir -p dist
+          for file in src/*.js; do
+            terser "$file" -o "dist/$(basename "$file" .js).min.js" --compress --mangle
+          done
+
+      - name: Commit Minified Files
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add dist/*.js
+          git commit -m "Minify JavaScript files" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
