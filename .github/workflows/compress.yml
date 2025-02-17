@@ -1,45 +1,47 @@
-name: Compress JavaScript
+name: Minify p-alo-script.js
 
 on:
   push:
     branches:
-      - main  # Adjust to your branch
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  minify-js:
+  minify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      # Step 1: Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '16'  # Specify the Node.js version you need
 
-      - name: Install Terser
-        run: npm install terser -g
+      # Step 3: Install terser globally
+      - name: Install terser
+        run: npm install -g terser
 
-      - name: Verify Terser Installation
-        run: terser --version
+      # Step 4: Download the specific JavaScript file from GitHub
+      - name: Download p-alo-script.js
+        run: |
+          mkdir -p src
+          curl -L -o src/p-alo-script.js https://raw.githubusercontent.com/Kawaqdr/Nothing/main/p-alo-script.js
 
-      - name: Minify JavaScript
+      # Step 5: Minify the downloaded JavaScript file
+      - name: Minify p-alo-script.js
         run: |
           mkdir -p dist
-          for file in src/*.js; do
-            terser "$file" -o "dist/$(basename "$file" .js).min.js" --compress --mangle
-          done
+          terser src/p-alo-script.js -o dist/p-alo-script.min.js -c -m
 
-      - name: List Minified Files
-        run: ls -lah dist
-
-      - name: Force Commit Minified Files
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add dist/*.js
-          git diff --staged --quiet || git commit -m "Minify JavaScript files"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Step 6: Upload minified file as an artifact (optional)
+      - name: Upload minified file
+        uses: actions/upload-artifact@v3
+        with:
+          name: minified-p-alo-script
+          path: dist/p-alo-script.min.js
